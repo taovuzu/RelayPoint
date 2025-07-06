@@ -1,0 +1,59 @@
+{
+  "name": "relaypoint-backend",
+  "version": "1.0.0",
+  "description": "RelayPoint - Workflow Automation Platform Backend",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon -L -r dotenv/config src/index.js",
+    "start": "node src/index.js",
+    "worker": "node src/worker.js",
+    "worker:dev": "nodemon -L -r dotenv/config src/worker.js",
+    "consumer": "node src/consumer.js",
+    "consumer:dev": "nodemon -L -r dotenv/config src/consumer.js",
+    "all": "nodemon -L -r dotenv/config src/index.js src/worker.js src/consumer.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "workflow",
+    "automation",
+    "zapier",
+    "mern",
+    "nodejs"
+  ],
+  "author": "RelayPoint Team",
+  "license": "MIT",
+  "dependencies": {
+    "@solana/web3.js": "^1.98.4",
+    "bcryptjs": "^2.4.3",
+    "bs58": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "googleapis": "^144.0.0",
+    "helmet": "^7.1.0",
+    "ioredis": "^5.8.0",
+    "jsonwebtoken": "^9.0.2",
+    "kafkajs": "^2.2.4",
+    "mailgen": "^2.0.30",
+    "mongoose": "^8.0.0",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.1",
+    "nodemon": "^3.0.2",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-jwt": "^4.0.1",
+    "rate-limit-redis": "^4.2.2",
+    "request-ip": "^3.3.0",
+    "socket.io": "^4.7.4",
+    "winston": "^3.11.0",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
