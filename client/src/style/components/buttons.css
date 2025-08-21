@@ -1,0 +1,63 @@
+/* Button Components */
+
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-primary-500 to-primary-600 text-white border-0 shadow-md hover:shadow-lg hover:from-primary-600 hover:to-primary-700 transform hover:-translate-y-0.5;
+}
+
+.btn-secondary {
+  @apply bg-white text-primary-600 border-2 border-primary-500 hover:bg-primary-500 hover:text-white hover:shadow-md transform hover:-translate-y-0.5;
+}
+
+.btn-ghost {
+  @apply bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900;
+}
+
+.btn-danger {
+  @apply bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-md hover:shadow-lg hover:from-red-600 hover:to-red-700 transform hover:-translate-y-0.5;
+}
+
+.btn-success {
+  @apply bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transform hover:-translate-y-0.5;
+}
+
+.btn-lg {
+  @apply px-6 py-3 text-base;
+}
+
+.btn-sm {
+  @apply px-3 py-1.5 text-xs;
+}
+
+.btn-icon {
+  @apply p-2;
+}
+
+.btn-loading {
+  @apply opacity-75 cursor-not-allowed;
+}
+
+/* Floating Action Button */
+.fab {
+  @apply fixed bottom-6 right-6 w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 z-50;
+}
+
+/* Button Groups */
+.btn-group {
+  @apply inline-flex;
+}
+
+.btn-group .btn {
+  @apply rounded-none border-r-0;
+}
+
+.btn-group .btn:first-child {
+  @apply rounded-l-lg;
+}
+
+.btn-group .btn:last-child {
+  @apply rounded-r-lg border-r;
+}

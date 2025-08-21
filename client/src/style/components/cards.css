@@ -1,0 +1,132 @@
+/* Card Components */
+
+.card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+}
+
+.card-header {
+  @apply px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-xl;
+}
+
+.card-body {
+  @apply px-6 py-4;
+}
+
+.card-footer {
+  @apply px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl;
+}
+
+.card-hover {
+  @apply hover:shadow-lg hover:-translate-y-2 transition-all duration-300;
+}
+
+.card-gradient {
+  @apply bg-gradient-to-br from-white to-gray-50;
+}
+
+.card-glass {
+  @apply bg-white/80 backdrop-blur-sm border border-white/20;
+}
+
+.card-feature {
+  @apply text-center p-8 hover:shadow-xl hover:-translate-y-2 transition-all duration-300;
+}
+
+.card-feature .icon {
+  @apply w-16 h-16 mx-auto mb-4 text-primary-500;
+}
+
+.card-feature h3 {
+  @apply text-xl font-semibold mb-3 text-gray-900;
+}
+
+.card-feature p {
+  @apply text-gray-600 leading-relaxed;
+}
+
+/* Stats Cards */
+.card-stat {
+  @apply text-center p-6 bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200;
+}
+
+.card-stat .stat-value {
+  @apply text-3xl font-bold text-primary-600 mb-2;
+}
+
+.card-stat .stat-label {
+  @apply text-sm text-primary-700 font-medium;
+}
+
+.card-stat .stat-change {
+  @apply text-xs text-green-600 font-medium;
+}
+
+/* Relay Cards */
+.card-relay {
+  @apply p-6 hover:shadow-lg transition-all duration-300 cursor-pointer;
+}
+
+.card-relay .relay-status {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.card-relay .relay-status.active {
+  @apply bg-green-100 text-green-800;
+}
+
+.card-relay .relay-status.inactive {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.card-relay .relay-status.running {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.card-relay .relay-status.failed {
+  @apply bg-red-100 text-red-800;
+}
+
+.card-relay .relay-title {
+  @apply text-lg font-semibold text-gray-900 mb-2;
+}
+
+.card-relay .relay-description {
+  @apply text-gray-600 text-sm mb-4;
+}
+
+.card-relay .relay-actions {
+  @apply flex items-center justify-between;
+}
+
+/* Pricing Cards */
+.card-pricing {
+  @apply relative p-8 text-center border-2 border-gray-200 rounded-xl hover:border-primary-500 hover:shadow-lg transition-all duration-300;
+}
+
+.card-pricing.featured {
+  @apply border-primary-500 shadow-lg scale-105;
+}
+
+.card-pricing .pricing-badge {
+  @apply absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary-500 text-white px-4 py-1 rounded-full text-sm font-medium;
+}
+
+.card-pricing .pricing-price {
+  @apply text-4xl font-bold text-gray-900 mb-2;
+}
+
+.card-pricing .pricing-period {
+  @apply text-gray-600 text-sm;
+}
+
+.card-pricing .pricing-features {
+  @apply space-y-3 mt-6;
+}
+
+.card-pricing .pricing-feature {
+  @apply flex items-center text-sm text-gray-600;
+}
+
+.card-pricing .pricing-feature .check {
+  @apply w-4 h-4 text-green-500 mr-3;
+}
