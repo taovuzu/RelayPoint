@@ -1,0 +1,259 @@
+/* Dashboard Styles */
+
+.dashboard-container {
+  @apply min-h-screen bg-gray-50;
+}
+
+.dashboard-header {
+  @apply bg-white shadow-sm border-b border-gray-200 px-6 py-4;
+}
+
+.dashboard-header h1 {
+  @apply text-3xl font-bold text-gray-900 mb-2;
+}
+
+.dashboard-header p {
+  @apply text-gray-600 text-lg;
+}
+
+.dashboard-stats {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8;
+}
+
+.dashboard-stat {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300;
+}
+
+.dashboard-stat .stat-icon {
+  @apply w-12 h-12 text-primary-500 mb-4;
+}
+
+.dashboard-stat .stat-value {
+  @apply text-3xl font-bold text-gray-900 mb-2;
+}
+
+.dashboard-stat .stat-label {
+  @apply text-gray-600 font-medium;
+}
+
+.dashboard-stat .stat-change {
+  @apply text-sm font-medium mt-2;
+}
+
+.dashboard-stat .stat-change.positive {
+  @apply text-green-600;
+}
+
+.dashboard-stat .stat-change.negative {
+  @apply text-red-600;
+}
+
+/* Relay Cards */
+.dashboard-relays {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+.dashboard-relay-card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer;
+}
+
+.dashboard-relay-card .relay-header {
+  @apply flex items-start justify-between mb-4;
+}
+
+.dashboard-relay-card .relay-title {
+  @apply text-lg font-semibold text-gray-900 mb-2;
+}
+
+.dashboard-relay-card .relay-description {
+  @apply text-gray-600 text-sm mb-4;
+}
+
+.dashboard-relay-card .relay-status {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.dashboard-relay-card .relay-status.active {
+  @apply bg-green-100 text-green-800;
+}
+
+.dashboard-relay-card .relay-status.inactive {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.dashboard-relay-card .relay-status.running {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.dashboard-relay-card .relay-status.failed {
+  @apply bg-red-100 text-red-800;
+}
+
+.dashboard-relay-card .relay-actions {
+  @apply flex items-center justify-between pt-4 border-t border-gray-200;
+}
+
+.dashboard-relay-card .relay-meta {
+  @apply flex items-center space-x-4 text-sm text-gray-500;
+}
+
+.dashboard-relay-card .relay-meta .meta-item {
+  @apply flex items-center space-x-1;
+}
+
+/* Quick Actions */
+.dashboard-quick-actions {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8;
+}
+
+.dashboard-quick-actions h3 {
+  @apply text-lg font-semibold text-gray-900 mb-4;
+}
+
+.dashboard-quick-actions .actions-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
+}
+
+.dashboard-quick-actions .action-item {
+  @apply flex items-center space-x-3 p-4 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all duration-300 cursor-pointer;
+}
+
+.dashboard-quick-actions .action-icon {
+  @apply w-8 h-8 text-primary-500;
+}
+
+.dashboard-quick-actions .action-content h4 {
+  @apply font-medium text-gray-900;
+}
+
+.dashboard-quick-actions .action-content p {
+  @apply text-sm text-gray-600;
+}
+
+/* Recent Activity */
+.dashboard-activity {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+}
+
+.dashboard-activity h3 {
+  @apply text-lg font-semibold text-gray-900 mb-4;
+}
+
+.dashboard-activity .activity-list {
+  @apply space-y-4;
+}
+
+.dashboard-activity .activity-item {
+  @apply flex items-start space-x-3 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200;
+}
+
+.dashboard-activity .activity-icon {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium;
+}
+
+.dashboard-activity .activity-icon.success {
+  @apply bg-green-100 text-green-600;
+}
+
+.dashboard-activity .activity-icon.error {
+  @apply bg-red-100 text-red-600;
+}
+
+.dashboard-activity .activity-icon.info {
+  @apply bg-blue-100 text-blue-600;
+}
+
+.dashboard-activity .activity-content {
+  @apply flex-1;
+}
+
+.dashboard-activity .activity-title {
+  @apply font-medium text-gray-900;
+}
+
+.dashboard-activity .activity-description {
+  @apply text-sm text-gray-600;
+}
+
+.dashboard-activity .activity-time {
+  @apply text-xs text-gray-500;
+}
+
+/* Empty State */
+.dashboard-empty {
+  @apply text-center py-16;
+}
+
+.dashboard-empty .empty-icon {
+  @apply w-16 h-16 mx-auto mb-4 text-gray-400;
+}
+
+.dashboard-empty h3 {
+  @apply text-xl font-semibold text-gray-900 mb-2;
+}
+
+.dashboard-empty p {
+  @apply text-gray-600 mb-6;
+}
+
+.dashboard-empty .empty-actions {
+  @apply flex flex-col sm:flex-row items-center justify-center gap-4;
+}
+
+/* Loading States */
+.dashboard-loading {
+  @apply flex items-center justify-center py-16;
+}
+
+.dashboard-skeleton {
+  @apply animate-pulse;
+}
+
+.dashboard-skeleton .skeleton-header {
+  @apply h-8 bg-gray-200 rounded mb-4;
+}
+
+.dashboard-skeleton .skeleton-text {
+  @apply h-4 bg-gray-200 rounded mb-2;
+}
+
+.dashboard-skeleton .skeleton-card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-stats {
+    @apply grid-cols-2;
+  }
+  
+  .dashboard-relays {
+    @apply grid-cols-1;
+  }
+  
+  .dashboard-quick-actions .actions-grid {
+    @apply grid-cols-1;
+  }
+  
+  .dashboard-empty .empty-actions {
+    @apply flex-col;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .dashboard-container {
+    @apply bg-gray-900;
+  }
+  
+  .dashboard-header {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  .dashboard-stat,
+  .dashboard-relay-card,
+  .dashboard-quick-actions,
+  .dashboard-activity {
+    @apply bg-gray-800 border-gray-700;
+  }
+}
