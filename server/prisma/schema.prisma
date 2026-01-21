@@ -1,0 +1,128 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String           @id @default(uuid())
+  fullName             String
+  email                String           @unique
+  password             String?
+  loginType            LoginType        @default(EMAIL_PASSWORD)
+  googleId             String?
+  refreshToken         String?
+  forgetPasswordToken  String?
+  forgetPasswordExpiry DateTime?
+  lastLoginAt          DateTime?
+  isEmailVerified      Boolean          @default(false)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  connections          Connection[]
+  relays               Relay[]
+  relayRuns            RelayRun[]
+  relayRunOutboxes     RelayRunOutbox[]
+}
+
+model Connection {
+  id                   String   @id @default(uuid())
+  userId               String
+  service              String
+  nangoConnectionId    String
+  accountIdentifier    String?
+  encryptedCredentials String
+  iv                   String
+  authTag              String
+  isActive             Boolean  @default(true)
+  lastUsedAt           DateTime @default(now())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, service, isActive])
+  @@index([userId, service])
+}
+
+model Relay {
+  id           String     @id @default(uuid())
+  userId       String
+  name         String
+  description  String?
+  active       Boolean    @default(false)
+  trigger      Json
+  actions      Json
+  webhookUrl   String?    @unique
+  lastRunAt    DateTime?
+  runCount     Int        @default(0)
+  successCount Int        @default(0)
+  failureCount Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  relayRuns    RelayRun[]
+
+  @@index([userId, active])
+}
+
+model RelayRun {
+  id               String           @id @default(uuid())
+  relayId          String
+  userId           String
+  status           RunStatus        @default(PENDING)
+  triggerMetadata  Json?
+  executionHistory Json?
+  startedAt        DateTime         @default(now())
+  completedAt      DateTime?
+  totalDuration    Int?
+  errorMessage     String?
+  currentStage     Int              @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  relay            Relay            @relation(fields: [relayId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outboxes         RelayRunOutbox[]
+
+  @@index([status])
+}
+
+model RelayRunOutbox {
+  id         String       @id @default(uuid())
+  relayRunId String
+  userId     String
+  payload    Json
+  status     OutboxStatus @default(PENDING)
+  retryCount Int          @default(0)
+  lockedAt   DateTime?
+  lockedBy   String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  relayRun   RelayRun     @relation(fields: [relayRunId], references: [id], onDelete: Cascade)
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+enum LoginType {
+  EMAIL_PASSWORD
+  GOOGLE
+  FACEBOOK
+}
+
+enum RunStatus {
+  PENDING
+  PROCESS
+  SUCCESS
+  FAILURE
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
