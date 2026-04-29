@@ -5,6 +5,7 @@ import builderReducer from './builder';
 import connectionsReducer from './connections';
 import settingsReducer from './settings';
 import workflowsReducer from './workflows';
+import appsReducer from './apps';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     connections: connectionsReducer,
     settings: settingsReducer,
     workflows: workflowsReducer,
+    apps: appsReducer,
   },
   devTools: import.meta.env.PROD === false,
   middleware: (getDefaultMiddleware) =>

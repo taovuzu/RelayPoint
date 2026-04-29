@@ -7,9 +7,11 @@ const handleError = (err, rejectWithValue) => {
   );
 };
 
-export const saveWorkflow = createAsyncThunk('builder/saveWorkflow', async (workflowData, { rejectWithValue }) => {
+export const saveWorkflow = createAsyncThunk('builder/saveWorkflow', async ({ workflowData, id }, { rejectWithValue }) => {
   try {
-    const response = await request.post('/api/v1/workflows', workflowData);
+    const response = id 
+      ? await request.patch(`/api/v1/workflows/${id}`, workflowData)
+      : await request.post('/api/v1/workflows', workflowData);
     return response.data;
   } catch (err) {
     return handleError(err, rejectWithValue);

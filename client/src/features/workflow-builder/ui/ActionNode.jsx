@@ -1,15 +1,16 @@
 import { Handle, Position } from '@xyflow/react';
-import { ACTION_REGISTRY } from '../model/node-registry';
 import { cn } from '@/shared/lib/cn';
 import { useSelector } from 'react-redux';
 import { selectSelectedNodeId } from '@/redux/builder';
+import { selectActionDef } from '@/redux/apps';
 import { Badge } from '@/shared/ui/badge';
 
 export function ActionNode({ id, data }) {
   const selectedNodeId = useSelector(selectSelectedNodeId);
   const isSelected = selectedNodeId === id;
-  const def = ACTION_REGISTRY[data.actionType] || { label: 'Unknown Action', icon: () => null, color: 'border-zinc-500', service: 'UNKNOWN' };
-  const Icon = def.icon;
+  
+  const actionDef = useSelector(selectActionDef(data.actionType));
+  const def = actionDef || { name: 'Unknown Action', iconUrl: null, primaryColor: '#71717a', appName: 'UNKNOWN' };
 
   return (
     <>
@@ -27,15 +28,22 @@ export function ActionNode({ id, data }) {
         )}
       >
         <div className="flex items-center gap-3">
-          <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-background text-foreground", def.color)}>
-            <Icon className="h-5 w-5" />
+          <div 
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-background overflow-hidden"
+            style={{ borderColor: def.primaryColor ? `${def.primaryColor}40` : undefined }}
+          >
+            {def.iconUrl ? (
+              <img src={def.iconUrl} alt={def.appName || 'Action'} className="h-6 w-6 object-contain" />
+            ) : (
+              <div className="h-5 w-5 bg-muted rounded-full" />
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-0.5">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</div>
-              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">{def.service}</Badge>
+              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">{def.appName}</Badge>
             </div>
-            <div className="font-medium text-sm leading-none truncate" title={def.label}>{def.label}</div>
+            <div className="font-medium text-sm leading-none truncate" title={def.name}>{def.name}</div>
           </div>
         </div>
       </div>

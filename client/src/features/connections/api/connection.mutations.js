@@ -35,6 +35,7 @@ export function useConnectSession() {
               'slack': 'SLACK',
               'github': 'GITHUB',
               'github-oauth': 'GITHUB',
+              'github-getting-started': 'GITHUB',
               'notion': 'NOTION'
             };
             

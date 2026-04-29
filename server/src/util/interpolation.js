@@ -4,8 +4,12 @@ function getNestedValue(obj, path) {
 
 function interpolateString(str, context) {
   return str.replace(/\{\{(.+?)\}\}/g, (match, path) => {
-    const value = getNestedValue(context, path.trim());
-    return value !== undefined ? String(value) : match;
+    const trimmedPath = path.trim();
+    const value = getNestedValue(context, trimmedPath);
+    if (value === undefined) {
+      throw new Error(`Variable resolution failed: "${trimmedPath}" is not defined in the execution context.`);
+    }
+    return String(value);
   });
 }
 

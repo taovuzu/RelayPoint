@@ -2,7 +2,10 @@ import { asyncHandler } from '#util/asyncHandler.js';
 import { ApiResponse } from '#util/ApiResponse.js';
 import logger from '#util/logger.js';
 import * as connectionService from '#features/connection/connection.service.js';
-import { mapProviderToService } from '#features/connection/connection.service.js';
+import * as webhookService from './webhook.service.js';
+import prisma from '#db/index.db.js';
+
+const { mapProviderToService } = connectionService;
 
 
 export const handleNangoAuthWebhook = asyncHandler(async (req, res) => {
@@ -30,6 +33,35 @@ export const handleNangoAuthWebhook = asyncHandler(async (req, res) => {
       logger.info(`Connection auto-saved for user ${userId} via Nango webhook`);
     } catch (error) {
       logger.error(`Failed to auto-save connection via Nango webhook: ${error.message}`, { userId, serviceName });
+    }
+  }
+
+  if (payload.type === 'sync' && payload.operation === 'incremental' && payload.success) {
+    const { connectionId, providerConfigKey, model, records } = payload;
+    
+    logger.info(`Nango sync webhook received for connection ${connectionId}, model ${model}, count ${records?.length}`);
+
+    const connection = await prisma.connection.findFirst({
+      where: { nangoConnectionId: connectionId, isActive: true },
+      select: { userId: true }
+    });
+
+    if (!connection) {
+      logger.warn(`Nango sync webhook received for unknown connection: ${connectionId}`);
+    } else {
+      const service = mapProviderToService(providerConfigKey);
+      
+      for (const record of (records || [])) {
+        try {
+          await webhookService.processNangoSyncTrigger(connection.userId, service, record);
+        } catch (error) {
+          logger.error(`Error processing Nango sync trigger for user ${connection.userId}: ${error.message}`, {
+            service,
+            model,
+            recordId: record.id
+          });
+        }
+      }
     }
   }
 

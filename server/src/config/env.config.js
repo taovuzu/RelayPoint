@@ -30,7 +30,7 @@ const envSchema = z.object({
 
   USER_TEMPORARY_TOKEN_EXPIRY: z.string().default('3600000').transform(Number),
   USER_PASSWORD_EXPIRY: z.string().default('86400000').transform(Number),
-  ENCRYPTION_KEY: z.string().length(64, 'ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)'),
+  BCRYPT_SALT_ROUNDS: z.string().default('12').transform(Number),
 
   // Mail
   MAIL_LINK: z.string().url(),
@@ -81,6 +81,23 @@ const envSchema = z.object({
 
   // Nango
   NANGO_SECRET_KEY: z.string().min(1, "NANGO_SECRET_KEY is required"),
+  
+  // Integration IDs
+  GITHUB_INTEGRATION_ID: z.string().default('github-getting-started'),
+  SLACK_INTEGRATION_ID: z.string().default('slack'),
+  GMAIL_INTEGRATION_ID: z.string().default('google-mail'),
+  NOTION_INTEGRATION_ID: z.string().default('notion'),
+
+  // Service API URLs
+  GITHUB_API_BASE_URL: z.string().url().default('https://api.github.com'),
+  SLACK_API_BASE_URL: z.string().url().default('https://slack.com/api'),
+  GMAIL_API_BASE_URL: z.string().url().default('https://gmail.googleapis.com'),
+  NOTION_API_BASE_URL: z.string().url().default('https://api.notion.com/v1'),
+  NOTION_API_VERSION: z.string().default('2022-06-28'),
+
+  // Workflow Execution
+  WORKFLOW_LOOP_THRESHOLD: z.string().default('10').transform(Number),
+  WORKFLOW_LOOP_WINDOW_MS: z.string().default('60000').transform(Number),
 });
 
 export function validateEnv() {

@@ -4,6 +4,7 @@ const envSchema = z.object({
   VITE_API_BASE_URL: z.string().url('VITE_API_BASE_URL must be a valid URL'),
   VITE_NANGO_PUBLIC_KEY: z.string().min(1, 'VITE_NANGO_PUBLIC_KEY is required'),
   VITE_ENV: z.enum(['development', 'staging', 'production']).default('development'),
+  VITE_API_TIMEOUT: z.string().default('15000').transform(Number),
 });
 
 export function validateEnv() {

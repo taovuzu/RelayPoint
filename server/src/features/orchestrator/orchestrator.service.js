@@ -22,6 +22,7 @@ export const processEvent = async (event) => {
       logger.info('Orchestrator: Run already finished, skipping', { relayRunId, status: relayRun.status });
       return;
     }
+
     const relay = await prisma.relay.findUnique({
       where: { id: relayId }
     });
@@ -32,14 +33,14 @@ export const processEvent = async (event) => {
     }
 
     const actions = relay.actions || [];
-
     const currentAction = actions[relayRun.currentStage];
 
     if (currentAction) {
       logger.info('Orchestrator: Dispatching next action', {
         relayRunId,
         stage: relayRun.currentStage,
-        actionId: currentAction.id
+        actionId: currentAction.id,
+        totalStages: actions.length,
       });
 
       await produceMessage(TOPICS.ACTION_COMMANDS, relayRunId, {
@@ -48,10 +49,13 @@ export const processEvent = async (event) => {
         userId,
         action: currentAction,
         stageIndex: relayRun.currentStage,
-        triggerData
+        triggerData,
       });
     } else {
-      logger.info('Orchestrator: Workflow finished successfully', { relayRunId });
+      logger.info('Orchestrator: Workflow finished successfully', {
+        relayRunId,
+        totalStages: actions.length,
+      });
 
       const completedAt = new Date();
       const startedAt = new Date(relayRun.startedAt);

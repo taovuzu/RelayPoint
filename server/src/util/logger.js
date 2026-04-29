@@ -1,6 +1,7 @@
 import winston from 'winston';
+import envConfig from '#config/env.config.js';
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = envConfig.NODE_ENV === 'production';
 
 const logFormat = isProduction
   ? winston.format.json()
@@ -50,7 +51,7 @@ const logger = winston.createLogger({
 });
 
 logger.info('Winston logger initialized', {
-  environment: process.env.NODE_ENV || 'development',
+  environment: envConfig.NODE_ENV,
   logLevel: logger.level
 });
 

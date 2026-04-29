@@ -2,7 +2,7 @@ import 'dotenv/config';
 import prisma from '#db/index.db.js';
 import { app } from '#app.js';
 import logger from '#util/logger.js';
-import { validateEnv } from '#config/env.config.js';
+import envConfig from '#config/env.config.js';
 
 import { startRelay, stopRelay } from '#features/trigger-relay/relay.worker.js';
 import { startOrchestratorConsumer, stopOrchestratorConsumer } from '#features/orchestrator/orchestrator.consumer.js';
@@ -15,8 +15,7 @@ let server;
 async function start() {
   try {
     logger.info('Starting server initialization');
-    validateEnv();
-
+    
     await prisma.$connect();
     logger.info('Database connected successfully');
 
@@ -29,11 +28,11 @@ async function start() {
     await startDLQConsumer();
 
 
-    const PORT = process.env.PORT;
+    const PORT = envConfig.PORT;
     server = app.listen(PORT, () => {
       logger.info(`Server started successfully on port ${PORT}`, {
         port: PORT,
-        environment: process.env.NODE_ENV
+        environment: envConfig.NODE_ENV
       });
     });
   } catch (error) {

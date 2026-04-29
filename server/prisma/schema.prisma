@@ -34,9 +34,6 @@ model Connection {
   service              String
   nangoConnectionId    String
   accountIdentifier    String?
-  encryptedCredentials String
-  iv                   String
-  authTag              String
   isActive             Boolean  @default(true)
   lastUsedAt           DateTime @default(now())
   createdAt            DateTime @default(now())

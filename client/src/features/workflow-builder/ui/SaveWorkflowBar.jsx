@@ -1,6 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { selectWorkflowName, setWorkflowName, selectNodes } from '@/redux/builder';
+import { selectWorkflowName, setWorkflowName, selectNodes, selectWorkflowId } from '@/redux/builder';
+import { selectAllApps } from '@/redux/apps';
 import { useSaveWorkflow } from '../api/builder.mutations';
 import { serializeWorkflow } from '../model/serializer';
 import { Input } from '@/shared/ui/input';
@@ -12,7 +13,9 @@ export function SaveWorkflowBar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const workflowName = useSelector(selectWorkflowName);
+  const workflowId = useSelector(selectWorkflowId);
   const nodes = useSelector(selectNodes);
+  const apps = useSelector(selectAllApps);
   const { mutate, isLoading } = useSaveWorkflow();
 
   const handleSave = () => {
@@ -29,8 +32,34 @@ export function SaveWorkflowBar() {
       return;
     }
 
-    const payload = serializeWorkflow({ nodes, name: workflowName });
-    mutate(payload, false);
+    // ── Validation: Check for missing required fields ────────────────
+    const invalidNodes = nodes.filter(node => {
+      const type = node.type === 'trigger' ? node.data.triggerType : node.data.actionType;
+      const app = apps.find(a => 
+        (a.triggers || []).some(t => t.key === type) || 
+        (a.actions || []).some(act => act.key === type)
+      );
+      if (!app) return false;
+      
+      const def = (app.triggers || []).find(t => t.key === type) || 
+                  (app.actions || []).find(act => act.key === type);
+      
+      if (!def || !def.arguments) return false;
+      
+      const requiredArgs = def.arguments.filter(a => a.required);
+      return requiredArgs.some(arg => {
+        const val = node.data.config?.[arg.key];
+        return val === undefined || val === null || val === '';
+      });
+    });
+
+    if (invalidNodes.length > 0) {
+      toast.error(`Please complete the configuration for all nodes.`);
+      return;
+    }
+
+    const payload = serializeWorkflow({ nodes, name: workflowName, apps });
+    mutate({ workflowData: payload, id: workflowId }, !!workflowId);
   };
 
   const handleCancel = () => {

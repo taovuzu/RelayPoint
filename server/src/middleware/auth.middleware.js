@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "#util/asyncHandler.js";
 import { ApiError } from "#util/ApiError.js";
+import envConfig from "#config/env.config.js";
 
 const verifyJWT = asyncHandler(async (req, res, next) => {
   const token = req.cookies?.accessToken;
@@ -10,7 +11,7 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const decoded = jwt.verify(token, envConfig.ACCESS_TOKEN_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
@@ -26,7 +27,7 @@ const getUserLoggedInOrNot = asyncHandler(async (req, res, next) => {
 
   if (!token) return next();
   try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const decoded = jwt.verify(token, envConfig.ACCESS_TOKEN_SECRET);
     req.user = decoded;
     next();
   } catch (error) {

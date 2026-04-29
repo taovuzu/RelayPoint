@@ -10,15 +10,15 @@ export function useSaveWorkflow() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-  const mutate = async (serializedPayload, isEdit = false) => {
+  const mutate = async ({ workflowData, id }, isEdit = false) => {
     setIsLoading(true);
     
     try {
-      const validPayload = workflowPayloadSchema.parse(serializedPayload);
+      const validWorkflowData = workflowPayloadSchema.parse(workflowData);
 
-      const result = await dispatch(saveWorkflow(validPayload)).unwrap();
+      await dispatch(saveWorkflow({ workflowData: validWorkflowData, id })).unwrap();
       
-      toast.success(isEdit ? 'Workflow updated' : 'Workflow created successfully');
+      toast.success(isEdit ? 'Workflow updated successfully' : 'Workflow created successfully');
       
       navigate('/workflows');
 

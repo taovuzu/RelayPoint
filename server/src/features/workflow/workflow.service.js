@@ -2,23 +2,29 @@ import prisma from '#db/index.db.js';
 import { ApiError } from '#util/ApiError.js';
 import { v4 as uuidv4 } from 'uuid';
 import { TRIGGER_TYPES, ACTION_TYPES } from '#constant.js';
+import { findTriggerByKey, findActionByKey } from '#apps/app-loader.js';
+import { createGlobalVariable } from '#apps/global-variable.js';
+import logger from '#util/logger.js';
+
+import envConfig from '#config/env.config.js';
 
 export const createWorkflow = async (userId, workflowData) => {
   const { name, description = null, trigger, actions } = workflowData;
 
   const sortedActions = [...actions].sort((a, b) => a.order - b.order);
 
-  if (!Object.values(TRIGGER_TYPES).includes(trigger.id)) {
+  const triggerDefInfo = findTriggerByKey(trigger.id);
+  if (!triggerDefInfo) {
     throw ApiError.badRequest(`Invalid trigger type: ${trigger.id}`);
   }
 
   for (const action of sortedActions) {
-    if (!Object.values(ACTION_TYPES).includes(action.id)) {
+    if (!findActionByKey(action.id)) {
       throw ApiError.badRequest(`Invalid action type: ${action.id}`);
     }
   }
 
-  const webhookUrl = trigger.id === TRIGGER_TYPES.WEBHOOK ? uuidv4() : null;
+  const webhookUrl = triggerDefInfo.trigger.type === 'webhook' ? uuidv4() : null;
 
   const workflow = await prisma.relay.create({
     data: {
@@ -109,14 +115,15 @@ export const updateWorkflow = async (userId, workflowId, workflowData) => {
   if (active !== undefined) updateData.active = active;
 
   if (trigger) {
-    if (!Object.values(TRIGGER_TYPES).includes(trigger.id)) {
+    const triggerDefInfo = findTriggerByKey(trigger.id);
+    if (!triggerDefInfo) {
       throw ApiError.badRequest(`Invalid trigger type: ${trigger.id}`);
     }
     updateData.trigger = trigger;
 
-    if (trigger.id === TRIGGER_TYPES.WEBHOOK && !existing.webhookUrl) {
+    if (triggerDefInfo.trigger.type === 'webhook' && !existing.webhookUrl) {
       updateData.webhookUrl = uuidv4();
-    } else if (trigger.id !== TRIGGER_TYPES.WEBHOOK && existing.webhookUrl) {
+    } else if (triggerDefInfo.trigger.type !== 'webhook' && existing.webhookUrl) {
       updateData.webhookUrl = null;
     }
   }
@@ -124,7 +131,7 @@ export const updateWorkflow = async (userId, workflowId, workflowData) => {
   if (actions) {
     const sortedActions = [...actions].sort((a, b) => a.order - b.order);
     for (const action of sortedActions) {
-      if (!Object.values(ACTION_TYPES).includes(action.id)) {
+      if (!findActionByKey(action.id)) {
         throw ApiError.badRequest(`Invalid action type: ${action.id}`);
       }
     }
@@ -164,12 +171,38 @@ export const toggleWorkflow = async (userId, workflowId) => {
     throw ApiError.notFound('Workflow not found');
   }
 
+  const newState = !existing.active;
+  const triggerDefInfo = findTriggerByKey(existing.trigger.id);
+  
+  if (triggerDefInfo && triggerDefInfo.trigger) {
+    const { app, trigger } = triggerDefInfo;
+    const $ = await createGlobalVariable({
+      app,
+      userId,
+      stepParameters: existing.trigger.config || {},
+      workflowId: existing.id,
+      webhookUrl: `${envConfig.APP_URL}/hooks/triggers/${existing.webhookUrl}`,
+    });
+
+    try {
+      if (newState) {
+        if (trigger.registerHook) await trigger.registerHook($);
+      } else {
+        if (trigger.unregisterHook) await trigger.unregisterHook($);
+      }
+    } catch (err) {
+      const errorDetail = err.response?.data?.message || err.response?.data?.error || err.message;
+      logger.error(`Failed to ${newState ? 'register' : 'unregister'} trigger hook: ${errorDetail}`, { workflowId, error: err.response?.data });
+      throw ApiError.internal(`Failed to ${newState ? 'activate' : 'deactivate'} workflow: ${errorDetail}`);
+    }
+  }
+
   const updated = await prisma.relay.update({
     where: { id: workflowId },
-    data: { active: !existing.active },
+    data: { active: newState },
   });
 
-  return { id: updated.id, active: updated.active };
+  return updated;
 };
 
 // ref: https://www.prisma.io/docs/orm/prisma-client/queries/crud

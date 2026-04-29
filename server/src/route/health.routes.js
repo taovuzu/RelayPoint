@@ -2,6 +2,7 @@ import { Router } from "express";
 import { asyncHandler } from "#util/asyncHandler.js";
 import { healthCheck as redisHealthCheck } from "#db/redis.db.js";
 import prisma from "#db/index.db.js";
+import envConfig from "#config/env.config.js";
 
 const router = Router();
 
@@ -66,7 +67,7 @@ router.get("/all", asyncHandler(async (req, res) => {
     statusCode: allHealthy ? 200 : 503,
     message: allHealthy ? "All systems are healthy" : "Some systems are unhealthy",
     data: {
-      environment: process.env.NODE_ENV || "development",
+      environment: envConfig.NODE_ENV,
       systems: {
         server: true,
         redis: redisHealthy,
@@ -85,7 +86,7 @@ router.get("/", asyncHandler(async (req, res) => {
     statusCode: 200,
     message: "Server is running correctly",
     data: {
-      environment: process.env.NODE_ENV || "development",
+      environment: envConfig.NODE_ENV,
       timestamp: new Date().toISOString()
     },
     timestamp: new Date().toISOString(),

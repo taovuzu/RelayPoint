@@ -1,6 +1,6 @@
 import { useCallback, useRef, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { ReactFlowProvider, ReactFlow, Background, addEdge, applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
+import { ReactFlowProvider, ReactFlow, Background, addEdge, applyNodeChanges, applyEdgeChanges, useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import { CanvasControls } from './CanvasControls';
@@ -17,6 +17,7 @@ import {
 export function WorkflowCanvas() {
   const reactFlowWrapper = useRef(null);
   const dispatch = useDispatch();
+  const { screenToFlowPosition } = useReactFlow();
   
   const nodes = useSelector(selectNodes);
   const edges = useSelector(selectEdges);
@@ -59,16 +60,16 @@ export function WorkflowCanvas() {
     (event) => {
       event.preventDefault();
 
-      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const rawData = event.dataTransfer.getData('application/reactflow');
       
       if (!rawData) return;
       
       const payload = JSON.parse(rawData);
-      const position = {
-        x: event.clientX - reactFlowBounds.left - 120, // Center node horizontally
-        y: event.clientY - reactFlowBounds.top - 40,   // Center node vertically
-      };
+      
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
 
       const newNode = {
         id: `${payload.type}-${crypto.randomUUID()}`,

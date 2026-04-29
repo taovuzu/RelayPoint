@@ -38,7 +38,7 @@ export const processBatch = async (jobLimit = 50) => {
 
 let relayInterval = null;
 
-export const startRelay = (intervalMs = 600000) => {
+export const startRelay = (intervalMs = 60000) => {
   if (relayInterval) {
     logger.warn('Relay worker is already running');
     return;

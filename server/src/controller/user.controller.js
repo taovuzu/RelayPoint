@@ -11,6 +11,7 @@ import prisma from "#db/index.db.js";
 import { redisClient, healthCheck } from "#db/redis.db.js";
 
 import { SALT_ROUNDS } from "#constant.js";
+import envConfig from "#config/env.config.js";
 
 const DUMMY_HASH = "$2b$12$L8O7j6i5h4g3f2e1d0c9b8a7f6e5d4c3b2a109876543210987654"; 
 
@@ -35,13 +36,13 @@ const safeCompare = (a, b) => {
 const generateTokens = (userId, email) => {
   const accessToken = jwt.sign(
     { id: userId, email },
-    process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+    envConfig.ACCESS_TOKEN_SECRET,
+    { expiresIn: envConfig.ACCESS_TOKEN_EXPIRY }
   );
   const refreshToken = jwt.sign(
     { id: userId },
-    process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
+    envConfig.REFRESH_TOKEN_SECRET,
+    { expiresIn: envConfig.REFRESH_TOKEN_EXPIRY }
   );
   return { accessToken, refreshToken };
 };

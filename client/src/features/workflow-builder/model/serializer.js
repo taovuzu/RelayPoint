@@ -1,4 +1,4 @@
-export function serializeWorkflow({ nodes = [], name = 'Untitled Workflow' }) {
+export function serializeWorkflow({ nodes = [], name = 'Untitled Workflow', apps = [] }) {
   const triggerNode = nodes.find(n => n.type === 'trigger');
   const actionNodes = nodes.filter(n => n.type === 'action');
 
@@ -6,15 +6,27 @@ export function serializeWorkflow({ nodes = [], name = 'Untitled Workflow' }) {
 
   return {
     name,
-    trigger: triggerNode ? {
-      id: triggerNode.data.triggerType,
-      config: triggerNode.data.config || {}
-    } : null,
-    actions: sortedActions.map((node, index) => ({
-      id: node.data.actionType,
-      order: index,
-      config: node.data.config || {}
-    }))
+    trigger: triggerNode ? (() => {
+      const app = apps.find(a => a.triggers.some(t => t.key === triggerNode.data.triggerType));
+      return {
+        id: triggerNode.data.triggerType,
+        config: {
+          ...(triggerNode.data.config || {}),
+          service: app ? app.service : null
+        }
+      };
+    })() : null,
+    actions: sortedActions.map((node, index) => {
+      const app = apps.find(a => a.actions.some(act => act.key === node.data.actionType));
+      return {
+        id: node.data.actionType,
+        order: index,
+        config: {
+          ...(node.data.config || {}),
+          service: app ? app.service : null
+        }
+      };
+    })
   };
 }
 

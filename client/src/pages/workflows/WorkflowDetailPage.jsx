@@ -49,9 +49,11 @@ export default function WorkflowDetailPage() {
     };
   }, [dispatch]);
 
+  const computedWebhookUrl = workflow?.webhookUrl ? `${import.meta.env.VITE_API_BASE_URL}/hooks/triggers/${workflow.webhookUrl}` : '';
+
   const copyWebhookUrl = () => {
-    if (workflow?.webhookUrl) {
-      navigator.clipboard.writeText(workflow.webhookUrl);
+    if (computedWebhookUrl) {
+      navigator.clipboard.writeText(computedWebhookUrl);
       toast.success('Webhook URL copied to clipboard');
     }
   };
@@ -212,7 +214,7 @@ export default function WorkflowDetailPage() {
               <CardContent>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 rounded-md bg-muted px-3 py-2 text-sm font-mono text-muted-foreground truncate">
-                    {workflow.webhookUrl}
+                    {computedWebhookUrl}
                   </code>
                   <Button variant="outline" size="icon" onClick={copyWebhookUrl}>
                     <Copy className="h-4 w-4" />

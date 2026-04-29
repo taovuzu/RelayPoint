@@ -1,4 +1,6 @@
-export const SALT_ROUNDS = 12;
+import envConfig from '#config/env.config.js';
+
+export const SALT_ROUNDS = envConfig.BCRYPT_SALT_ROUNDS;
 
 export const RUN_STATUS = Object.freeze({
   PENDING: 'PENDING',
@@ -21,31 +23,36 @@ export const SERVICES = Object.freeze({
   NOTION: 'NOTION',
 });
 
+export const NANGO_INTEGRATION_IDS = Object.freeze({
+  GMAIL: envConfig.GMAIL_INTEGRATION_ID,
+  SLACK: envConfig.SLACK_INTEGRATION_ID,
+  GITHUB: envConfig.GITHUB_INTEGRATION_ID,
+  NOTION: envConfig.NOTION_INTEGRATION_ID,
+});
+
+export const NANGO_TO_SERVICE_MAPPING = Object.freeze({
+  [envConfig.GMAIL_INTEGRATION_ID]: 'GMAIL',
+  [envConfig.SLACK_INTEGRATION_ID]: 'SLACK',
+  [envConfig.GITHUB_INTEGRATION_ID]: 'GITHUB',
+  [envConfig.NOTION_INTEGRATION_ID]: 'NOTION',
+  'GMAIL': 'GMAIL',
+  'SLACK': 'SLACK',
+  'GITHUB': 'GITHUB',
+  'NOTION': 'NOTION'
+});
+
 export const ACTION_TYPES = Object.freeze({
-  SEND_EMAIL: 'send-email',
-  POST_SLACK_MESSAGE: 'post-message',
-  CREATE_GITHUB_ISSUE: 'create-issue',
-  CREATE_NOTION_PAGE: 'create-page',
+  SEND_EMAIL: 'sendEmail',
+  SEND_MESSAGE_TO_CHANNEL: 'sendMessageToChannel',
+  SEND_DIRECT_MESSAGE: 'sendDirectMessage',
+  CREATE_ISSUE: 'createIssue',
+  CREATE_PAGE: 'createPage',
 });
 
 export const TRIGGER_TYPES = Object.freeze({
-  WEBHOOK: 'webhook',
-  GITHUB_NEW_ISSUE: 'github-new-issue',
-  SLACK_NEW_MESSAGE: 'slack-new-message',
-  GMAIL_NEW_EMAIL: 'gmail-new-email',
-  STRIPE: 'stripe',
-  SHOPIFY: 'shopify',
-  DISCORD: 'discord',
-  LINEAR: 'linear',
-  JIRA: 'jira',
-  TYPEFORM: 'typeform',
-  MAILCHIMP: 'mailchimp',
-  HUBSPOT: 'hubspot',
-  CALENDLY: 'calendly',
-  TWILIO: 'twilio',
-  INTERCOM: 'intercom',
-  ZENDESK: 'zendesk',
-  TRELLO: 'trello',
-  ASANA: 'asana',
-  SALESFORCE: 'salesforce',
+  WEBHOOK: 'catchRawWebhook',
+  NEW_ISSUE_EVENT: 'newIssueEvent',
+  NEW_PUSH_EVENT: 'newPushEvent',
+  NEW_MESSAGE: 'newMessage',
+  NEW_EMAIL: 'newEmail',
 });

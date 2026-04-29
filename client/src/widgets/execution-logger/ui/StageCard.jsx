@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { selectAllApps } from '@/redux/apps';
 import { getStageLabel, getStageIcon } from '@/features/execution-monitor/model/execution.utils';
 import { formatDuration, formatDate } from '@/shared/lib/format';
 import { cn } from '@/shared/lib/cn';
@@ -20,8 +22,9 @@ function StepStatusIcon({ status, isActive }) {
 
 export function StageCard({ entry, isActive, isLast }) {
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
-  const label = getStageLabel(entry.actionId);
-  const Icon = getStageIcon(entry.actionId);
+  const apps = useSelector(selectAllApps);
+  const label = getStageLabel(entry.actionId, apps);
+  const iconSrc = getStageIcon(entry.actionId, apps);
 
   return (
     <div className="relative flex gap-4">
@@ -61,7 +64,11 @@ export function StageCard({ entry, isActive, isLast }) {
           {/* Header Row */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              {Icon && <Icon className="h-4 w-4 text-muted-foreground shrink-0" />}
+              {iconSrc ? (
+                <img src={iconSrc} alt={label} className="h-4 w-4 shrink-0 object-contain" />
+              ) : (
+                <div className="h-4 w-4 rounded-full bg-muted shrink-0" />
+              )}
               <span className="text-sm font-medium truncate">{label}</span>
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
                 Step {entry.stageIndex + 1}

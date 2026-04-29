@@ -2,10 +2,12 @@ import { createSlice } from '@reduxjs/toolkit';
 import { saveWorkflow } from './builderThunks';
 
 const INITIAL_STATE = {
+  workflowId: null,
   nodes: [],
   edges: [],
   selectedNodeId: null,
   workflowName: "Untitled Workflow",
+  nodeOutputs: {},
   isLoading: false,
   errorMessage: "",
   validationErrors: []
@@ -18,6 +20,9 @@ const builderSlice = createSlice({
     clearBuilderError: (state) => {
       state.errorMessage = "";
       state.validationErrors = [];
+    },
+    setWorkflowId: (state, action) => {
+      state.workflowId = action.payload;
     },
     setNodes: (state, action) => {
       state.nodes = action.payload;
@@ -39,7 +44,7 @@ const builderSlice = createSlice({
       const { id, config } = action.payload;
       const node = state.nodes.find(n => n.id === id);
       if (node) {
-        node.data = { ...node.data, ...config };
+        node.data.config = { ...node.data.config, ...config };
       }
     },
     setSelectedNodeId: (state, action) => {
@@ -47,6 +52,10 @@ const builderSlice = createSlice({
     },
     setWorkflowName: (state, action) => {
       state.workflowName = action.payload;
+    },
+    setNodeOutput: (state, action) => {
+      const { nodeId, output } = action.payload;
+      state.nodeOutputs[nodeId] = output;
     }
   },
   extraReducers: (builder) => {
@@ -66,11 +75,11 @@ const builderSlice = createSlice({
       .addCase(saveWorkflow.pending, handlePending)
       .addCase(saveWorkflow.fulfilled, (state) => {
         state.isLoading = false;
-        // Optionally reset builder state here or handle navigation in the component
       })
       .addCase(saveWorkflow.rejected, handleRejected);
   },
   selectors: {
+    selectWorkflowId: (state) => state.workflowId,
     selectBuilderState: (state) => state,
     selectNodes: (state) => state.nodes,
     selectEdges: (state) => state.edges,
@@ -78,22 +87,26 @@ const builderSlice = createSlice({
     selectWorkflowName: (state) => state.workflowName,
     selectBuilderLoading: (state) => state.isLoading,
     selectBuilderErrorMessage: (state) => state.errorMessage,
-    selectBuilderValidationErrors: (state) => state.validationErrors
+    selectBuilderValidationErrors: (state) => state.validationErrors,
+    selectNodeOutputs: (state) => state.nodeOutputs
   }
 });
 
 export const {
   clearBuilderError,
+  setWorkflowId,
   setNodes,
   setEdges,
   addNode,
   removeNode,
   updateNodeConfig,
   setSelectedNodeId,
-  setWorkflowName
+  setWorkflowName,
+  setNodeOutput
 } = builderSlice.actions;
 
 export const {
+  selectWorkflowId,
   selectBuilderState,
   selectNodes,
   selectEdges,
@@ -101,7 +114,8 @@ export const {
   selectWorkflowName,
   selectBuilderLoading,
   selectBuilderErrorMessage,
-  selectBuilderValidationErrors
+  selectBuilderValidationErrors,
+  selectNodeOutputs
 } = builderSlice.selectors;
 
 export default builderSlice.reducer;

@@ -1,23 +1,29 @@
-import { ACTION_REGISTRY, TRIGGER_REGISTRY } from '@/features/workflow-builder/model/node-registry';
-
 const TERMINAL_STATUSES = new Set(['SUCCESS', 'FAILURE']);
 
 export function isTerminalStatus(status) {
   return TERMINAL_STATUSES.has(status);
 }
 
-
-export function getStageLabel(actionId) {
+export function getStageLabel(actionId, apps = []) {
   if (!actionId) return 'Unknown Step';
-  return ACTION_REGISTRY[actionId]?.label || TRIGGER_REGISTRY[actionId]?.label || actionId;
+  for (const app of apps) {
+    const action = app.actions?.find(a => a.key === actionId);
+    if (action) return action.name;
+    const trigger = app.triggers?.find(t => t.key === actionId);
+    if (trigger) return trigger.name;
+  }
+  return actionId;
 }
 
-
-export function getStageIcon(actionId) {
+export function getStageIcon(actionId, apps = []) {
   if (!actionId) return null;
-  return ACTION_REGISTRY[actionId]?.icon || TRIGGER_REGISTRY[actionId]?.icon || null;
+  for (const app of apps) {
+    if (app.actions?.some(a => a.key === actionId) || app.triggers?.some(t => t.key === actionId)) {
+      return app.iconUrl;
+    }
+  }
+  return null;
 }
-
 
 export function calculateSuccessRate(runs) {
   if (!runs?.length) return null;

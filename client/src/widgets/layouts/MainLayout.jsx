@@ -1,12 +1,19 @@
+import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { AppSidebar } from '@/widgets/app-sidebar/ui/AppSidebar';
 import { AppHeader } from '@/widgets/app-header/ui/AppHeader';
 import { selectSidebarCollapsed } from '@/redux/app';
+import { fetchApps } from '@/redux/apps';
 import { cn } from '@/shared/lib/cn';
 
 export function MainLayout() {
+  const dispatch = useDispatch();
   const isCollapsed = useSelector(selectSidebarCollapsed);
+
+  useEffect(() => {
+    dispatch(fetchApps());
+  }, [dispatch]);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">

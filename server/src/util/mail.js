@@ -1,31 +1,32 @@
 import nodemailer from "nodemailer";
 import Mailgen from "mailgen";
 import { ApiError } from "./ApiError.js";
+import envConfig from "#config/env.config.js";
 
 const sendEmail = async (input) => {
 
   const mailGenerator = new Mailgen({
     theme: "default",
     product: {
-      name: process.env.APP_NAME,
-      link: process.env.MAIL_LINK
+      name: envConfig.APP_NAME,
+      link: envConfig.MAIL_LINK
     }
   });
 
   const transporter = nodemailer.createTransport({
-    host: process.env.MAILTRAP_SMTP_HOST,
-    port: Number(process.env.MAILTRAP_SMTP_PORT),
-    secure: process.env.MAILTRAP_SMTP_SECURE === 'true',
+    host: envConfig.MAILTRAP_SMTP_HOST,
+    port: envConfig.MAILTRAP_SMTP_PORT,
+    secure: envConfig.MAILTRAP_SMTP_SECURE,
     auth: {
-      user: process.env.MAILTRAP_SMTP_USER,
-      pass: process.env.MAILTRAP_SMTP_PASS
+      user: envConfig.MAILTRAP_SMTP_USER,
+      pass: envConfig.MAILTRAP_SMTP_PASS
     }
   });
 
   const emailHTML = mailGenerator.generate(input.mailgenContent);
   const emailText = mailGenerator.generatePlaintext(input.mailgenContent);
   const mail = {
-    from: process.env.MAIL_SENDER,
+    from: envConfig.MAIL_SENDER,
     to: input.email,
     subject: input.subject,
     text: emailText,
@@ -40,7 +41,7 @@ const sendEmail = async (input) => {
 };
 
 const emailVerificationMailgen = (verificationUrl, otpNumber) => {
-  const appName = process.env.APP_NAME;
+  const appName = envConfig.APP_NAME;
   return {
     body: {
       intro: `Welcome to ${appName}! We're very excited to have you on board.`,
@@ -58,7 +59,7 @@ const emailVerificationMailgen = (verificationUrl, otpNumber) => {
 };
 
 const forgetPasswordMailgen = (verificationUrl) => {
-  const appName = process.env.APP_NAME;
+  const appName = envConfig.APP_NAME;
   return {
     body: {
       intro: `Welcome to ${appName}! We're very excited to have you on board.`,

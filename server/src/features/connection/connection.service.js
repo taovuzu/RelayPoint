@@ -1,37 +1,32 @@
 import prisma from '#db/index.db.js';
-import { encrypt, decrypt } from '#util/encryption.js';
 import { ApiError } from '#util/ApiError.js';
 import logger from '#util/logger.js';
 import { nango } from '#util/nango.js';
+import { NANGO_INTEGRATION_IDS, NANGO_TO_SERVICE_MAPPING } from '#constant.js';
 
-const INTEGRATION_IDS = {
-  GMAIL: 'google-mail',
-  SLACK: 'slack',
-  GITHUB: 'github',
-  NOTION: 'notion',
-};
 
 export const mapProviderToService = (providerKey) => {
-  if (!providerKey) return null;
-  
-  const key = providerKey.toLowerCase();
-  
-  if (key.includes('slack')) return 'SLACK';
-  if (key.includes('github')) return 'GITHUB';
-  if (key.includes('notion')) return 'NOTION';
-  if (key.includes('google-mail') || key.includes('gmail')) return 'GMAIL';
-  
-  return key.toUpperCase();
+  if (!providerKey) {
+    throw ApiError.badRequest('Provider key is missing for service mapping.');
+  }
+ 
+  const service = NANGO_TO_SERVICE_MAPPING[providerKey] || NANGO_TO_SERVICE_MAPPING[providerKey.toLowerCase()];
+
+  if (!service) {
+    throw ApiError.badRequest(`Unsupported or unknown integration provider: ${providerKey}`);
+  }
+
+  return service;
 };
 
 const tokenExchangeStrategies = {
-  GMAIL: async (connectionId) => nango.getConnection(INTEGRATION_IDS.GMAIL, connectionId),
-  SLACK: async (connectionId) => nango.getConnection(INTEGRATION_IDS.SLACK, connectionId),
-  GITHUB: async (connectionId) => nango.getConnection(INTEGRATION_IDS.GITHUB, connectionId),
-  NOTION: async (connectionId) => nango.getConnection(INTEGRATION_IDS.NOTION, connectionId),
+  GMAIL: async (connectionId) => nango.getConnection(NANGO_INTEGRATION_IDS.GMAIL, connectionId),
+  SLACK: async (connectionId) => nango.getConnection(NANGO_INTEGRATION_IDS.SLACK, connectionId),
+  GITHUB: async (connectionId) => nango.getConnection(NANGO_INTEGRATION_IDS.GITHUB, connectionId),
+  NOTION: async (connectionId) => nango.getConnection(NANGO_INTEGRATION_IDS.NOTION, connectionId),
 };
 
-export const getAvailableIntegrations = () => Object.values(INTEGRATION_IDS);
+export const getAvailableIntegrations = () => Object.values(NANGO_INTEGRATION_IDS);
 
 
 export const createConnection = async (userId, { service: rawService, connectionId, accountIdentifier }) => {
@@ -45,9 +40,7 @@ export const createConnection = async (userId, { service: rawService, connection
       throw ApiError.badRequest(`Unsupported service type: ${service}`);
     }
 
-    const tokens = await exchangeStrategy(connectionId);
-
-    const { encryptedCredentials, iv, authTag } = encrypt(JSON.stringify(tokens));
+    await exchangeStrategy(connectionId);
 
     const connection = await prisma.connection.upsert({
       where: {
@@ -60,9 +53,6 @@ export const createConnection = async (userId, { service: rawService, connection
       update: {
         accountIdentifier: accountIdentifier || null,
         nangoConnectionId: connectionId,
-        encryptedCredentials,
-        iv,
-        authTag,
         lastUsedAt: new Date()
       },
       create: {
@@ -70,9 +60,6 @@ export const createConnection = async (userId, { service: rawService, connection
         service,
         accountIdentifier: accountIdentifier || null,
         nangoConnectionId: connectionId,
-        encryptedCredentials,
-        iv,
-        authTag,
       },
       select: {
         id: true,
@@ -164,35 +151,6 @@ export const deleteConnection = async (userId, connectionId) => {
   }
 };
 
-export const getDecryptedCredentials = async (userId, service) => {
-  try {
-    const connection = await prisma.connection.findFirst({
-      where: { userId, service, isActive: true },
-    });
-
-    if (!connection) {
-      throw ApiError.notFound(`No active ${service} connection found`);
-    }
-
-    const decrypted = decrypt({
-      encryptedCredentials: connection.encryptedCredentials,
-      iv: connection.iv,
-      authTag: connection.authTag
-    });
-
-    await prisma.connection.update({
-      where: { id: connection.id },
-      data: { lastUsedAt: new Date() },
-    });
-
-    return JSON.parse(decrypted);
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    logger.error(`Error decrypting credentials for service ${service} (user ${userId}):`, { error: error.message });
-    throw ApiError.internal('Failed to retrieve working service credentials');
-  }
-};
-
 
 export const getNangoConnectionId = async (userId, service) => {
   try {
@@ -222,21 +180,16 @@ export const healConnectionTokens = async (userId, service) => {
       throw ApiError.notFound(`Connection for ${service} not found`);
     }
 
-    const integrationId = INTEGRATION_IDS[service];
+    const integrationId = NANGO_INTEGRATION_IDS[service];
     if (!integrationId) {
       throw ApiError.badRequest(`Unsupported service for healing: ${service}`);
     }
 
-    const freshTokens = await nango.getConnection(integrationId, connection.nangoConnectionId, { force_refresh: true });
-
-    const { encryptedCredentials, iv, authTag } = encrypt(JSON.stringify(freshTokens));
+    await nango.getConnection(integrationId, connection.nangoConnectionId, { force_refresh: true });
 
     const updated = await prisma.connection.update({
       where: { id: connection.id },
       data: {
-        encryptedCredentials,
-        iv,
-        authTag,
         isActive: true,
         lastUsedAt: new Date(),
       },
@@ -275,7 +228,7 @@ export const createConnectSession = async (userId, requestedIntegrations = []) =
     return response.data.token;
   } catch (error) {
     const nangoError = error.response?.data?.error;
-    logger.error(`Error creating Nango connect session for user ${userId}:`, { 
+    logger.error(`Error creating Nango connect session for user ${userId}:`, {
       error: error.message,
       response: error.response?.data,
       requestedIntegrations,

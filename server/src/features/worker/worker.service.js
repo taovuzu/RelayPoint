@@ -1,17 +1,17 @@
 import prisma from '#db/index.db.js';
-import { withAuthRetry } from '#util/retry.js';
 import { produceMessage } from '#util/kafka.js';
 import { TOPICS } from '#config/kafka.config.js';
-import { isAlreadyProcessed, markInProgress } from './idempotency.service.js';
-import { storeFailed } from '#features/dlq/dlq.service.js';
 import logger from '#util/logger.js';
-import { getNangoConnectionId, healConnectionTokens } from "#features/connection/connection.service.js";
+import { isAlreadyProcessed } from '#features/worker/idempotency.service.js';
+import { healConnectionTokens, getNangoConnectionId } from '#features/connection/connection.service.js';
+import { withAuthRetry } from '#util/retry.js';
 import { interpolate } from '#util/interpolation.js';
-import * as gmail from '#features/integrations/gmail.client.js';
-import * as slack from '#features/integrations/slack.client.js';
-import * as github from '#features/integrations/github.client.js';
-import * as notion from '#features/integrations/notion.client.js';
+import { storeFailed } from '#features/dlq/dlq.service.js';
+import { buildExecutionContext } from '#util/execution-context.js';
 import { ACTION_TYPES, RUN_STATUS } from '#constant.js';
+import { findActionByKey } from '#apps/app-loader.js';
+import { createGlobalVariable } from '#apps/global-variable.js';
+
 
 export const executeAction = async (actionEvent) => {
   const { relayRunId, relayId, userId, action, stageIndex, triggerData } = actionEvent;
@@ -22,78 +22,122 @@ export const executeAction = async (actionEvent) => {
     return;
   }
 
-  if (stageIndex === 0) {
-    const marked = await markInProgress(relayRunId);
-    if (!marked) {
-      logger.warn('Worker: Failed to mark run in progress (already started by another worker)', { relayRunId });
-      return;
-    }
-  }
-
   const healAuthCallback = async () => healConnectionTokens(userId, action.config.service);
+  const stepStartedAt = Date.now();
 
   try {
-    await withAuthRetry(async () => {
-      // Resolve Dynamic Variables in Config -> interpolate variables like {{title}} from triggerData into action.config
-      const interpolatedConfig = interpolate(action.config, triggerData);
-      
-      logger.info('Worker: Executing action', { 
-        relayRunId, 
-        actionId: action.id, 
-        stage: stageIndex,
-        service: action.config.service 
-      });
-
-      const nangoConnectionId = await getNangoConnectionId(userId, action.config.service);
-
-      switch (action.id) {
-        case ACTION_TYPES.SEND_EMAIL:
-          await gmail.sendEmail(nangoConnectionId, interpolatedConfig);
-          break;
-        case ACTION_TYPES.POST_SLACK_MESSAGE:
-          await slack.postMessage(nangoConnectionId, interpolatedConfig);
-          break;
-        case ACTION_TYPES.CREATE_GITHUB_ISSUE:
-          await github.createIssue(nangoConnectionId, interpolatedConfig);
-          break;
-        case ACTION_TYPES.CREATE_NOTION_PAGE:
-          await notion.createPage(nangoConnectionId, interpolatedConfig);
-          break;
-        default:
-          throw new Error(`Unknown action type: ${action.id}`);
-      }
-
-      await prisma.relayRun.update({
+    const stepResult = await withAuthRetry(async () => {
+      const relayRun = await prisma.relayRun.findUnique({
         where: { id: relayRunId },
-        data: { currentStage: { increment: 1 } }
+        select: { executionHistory: true, triggerMetadata: true }
       });
 
-      await produceMessage(TOPICS.WORKFLOW_COMMANDS, relayRunId, {
-        type: 'STEP_COMPLETED',
+      const executionContext = buildExecutionContext(
+        triggerData,
+        relayRun?.executionHistory || []
+      );
+
+      const interpolatedConfig = interpolate(action.config, executionContext);
+
+      logger.info('Worker: Executing action', {
         relayRunId,
-        relayId,
-        userId,
-        triggerData
+        actionId: action.id,
+        stage: stageIndex,
+        service: action.config.service
       });
 
-      logger.info('Worker: Action completed and next step triggered', { relayRunId, stage: stageIndex });
+      const { app, action: actionDef } = findActionByKey(action.id);
+      if (!actionDef) throw new Error(`Unknown action: ${action.id}`);
+
+      const $ = await createGlobalVariable({
+        app,
+        userId,
+        stepParameters: interpolatedConfig,
+        executionContext,
+      });
+
+      await actionDef.run($);
+      return $.actionOutput.data?.raw ?? $.actionOutput.data;
+
     }, healAuthCallback);
 
-  } catch (err) {
-    logger.error('Worker: Permanent failure executing action', { 
-      relayRunId, 
-      actionId: action.id, 
-      error: err.message,
-      stack: err.stack 
+    const stepDuration = Date.now() - stepStartedAt;
+
+    const stepEntry = {
+      stageIndex,
+      actionId: action.id,
+      service: action.config.service,
+      status: 'SUCCESS',
+      dataOut: stepResult ?? null,
+      startedAt: new Date(stepStartedAt).toISOString(),
+      completedAt: new Date().toISOString(),
+      duration: stepDuration,
+    };
+
+    const currentRun = await prisma.relayRun.findUnique({
+      where: { id: relayRunId },
+      select: { executionHistory: true }
     });
+
+    const updatedHistory = [...(currentRun?.executionHistory || []), stepEntry];
+
+    await prisma.relayRun.update({
+      where: { id: relayRunId },
+      data: {
+        currentStage: { increment: 1 },
+        executionHistory: updatedHistory,
+      }
+    });
+
+    await produceMessage(TOPICS.WORKFLOW_COMMANDS, relayRunId, {
+      type: 'STEP_COMPLETED',
+      relayRunId,
+      relayId,
+      userId,
+      triggerData,
+    });
+
+    logger.info('Worker: Action completed and next step triggered', {
+      relayRunId,
+      stage: stageIndex,
+      duration: stepDuration,
+    });
+
+  } catch (err) {
+    const stepDuration = Date.now() - stepStartedAt;
+    logger.error('Worker: Permanent failure executing action', {
+      relayRunId,
+      actionId: action.id,
+      error: err.message,
+      stack: err.stack
+    });
+
+    const failedEntry = {
+      stageIndex,
+      actionId: action.id,
+      service: action.config.service,
+      status: 'FAILURE',
+      error: err.message,
+      startedAt: new Date(stepStartedAt).toISOString(),
+      completedAt: new Date().toISOString(),
+      duration: stepDuration,
+    };
+
+    const currentRun = await prisma.relayRun.findUnique({
+      where: { id: relayRunId },
+      select: { executionHistory: true }
+    });
+
+    const updatedHistory = [...(currentRun?.executionHistory || []), failedEntry];
 
     await prisma.$transaction([
       prisma.relayRun.update({
         where: { id: relayRunId },
-        data: { 
-          status: RUN_STATUS.FAILURE, 
-          errorMessage: err.message, 
-          completedAt: new Date() 
+        data: {
+          status: RUN_STATUS.FAILURE,
+          errorMessage: err.message,
+          completedAt: new Date(),
+          executionHistory: updatedHistory,
         }
       }),
       prisma.relay.update({
@@ -102,14 +146,9 @@ export const executeAction = async (actionEvent) => {
       })
     ]);
 
-    await storeFailed(actionEvent, { 
-      error: err.message, 
-      stack: err.stack 
+    await storeFailed(actionEvent, {
+      error: err.message,
+      stack: err.stack
     });
   }
 };
-
-
-// ref: https://www.prisma.io/docs/orm/prisma-client/queries/transactions
-// ref: https://www.prisma.io/docs/orm/prisma-client/queries/aggregation-grouping-summarizing
-// ref: https://kafka.js.org/docs/producing

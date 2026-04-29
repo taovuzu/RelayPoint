@@ -4,13 +4,14 @@ import { redisClient } from "#db/redis.db.js";
 import rateLimit from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
 import logger from "#util/logger.js";
+import envConfig from "#config/env.config.js";
 
 export const globalSlowDown = (options = {}) => {
   const {
-    windowMs = Number(process.env.GLOBAL_SLOWDOWN_WINDOW_MS),
-    prefix = process.env.GLOBAL_SLOWDOWN_PREFIX,
-    threshold = Number(process.env.GLOBAL_SLOWDOWN_THRESHOLD),
-    calcDelayMs = (hitsOver) => hitsOver * Number(process.env.GLOBAL_SLOWDOWN_DELAY_STEP_MS)
+    windowMs = envConfig.GLOBAL_SLOWDOWN_WINDOW_MS,
+    prefix = envConfig.GLOBAL_SLOWDOWN_PREFIX,
+    threshold = envConfig.GLOBAL_SLOWDOWN_THRESHOLD,
+    calcDelayMs = (hitsOver) => hitsOver * envConfig.GLOBAL_SLOWDOWN_DELAY_STEP_MS
   } = options;
 
   return asyncHandler(async (req, res, next) => {
@@ -44,14 +45,14 @@ export const globalSlowDown = (options = {}) => {
 
 export const sensitiveRateLimiter = (options = {}) => {
   const {
-    windowMs = Number(process.env.SENSITIVE_RATE_LIMIT_WINDOW_MS),
-    max = Number(process.env.SENSITIVE_RATE_LIMIT_MAX_REQUESTS),
-    prefix = process.env.SENSITIVE_RATE_LIMIT_PREFIX
+    windowMs = envConfig.SENSITIVE_RATE_LIMIT_WINDOW_MS,
+    max = envConfig.SENSITIVE_RATE_LIMIT_MAX_REQUESTS,
+    prefix = envConfig.SENSITIVE_RATE_LIMIT_PREFIX
   } = options;
 
   return rateLimit({
     windowMs,
-    max: process.env.NODE_ENV === 'development' ? 1000 : max,
+    max: envConfig.NODE_ENV === 'development' ? 1000 : max,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res, _next, options) => {
@@ -82,9 +83,9 @@ export const sensitiveRateLimiter = (options = {}) => {
 
 export const downloadRateLimiter = (options = {}) => {
   const {
-    windowMs = Number(process.env.DOWNLOAD_RATE_LIMIT_WINDOW_MS),
-    max = Number(process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS),
-    prefix = process.env.DOWNLOAD_RATE_LIMIT_PREFIX
+    windowMs = envConfig.DOWNLOAD_RATE_LIMIT_WINDOW_MS,
+    max = envConfig.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS,
+    prefix = envConfig.DOWNLOAD_RATE_LIMIT_PREFIX
   } = options;
 
   return rateLimit({
